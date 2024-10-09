@@ -1,0 +1,51 @@
+name: Deploy to ECR
+
+on:
+    workflow_dispatch:
+      inputs:
+        environment:
+          type: choice
+          description: " select env.."
+          options:
+              - test
+              - dev
+              - preprod
+              - prod
+          required: true
+          default: 'dev'
+        confirm:
+          type: boolean
+          description: "Sure, think agaian.." 
+          required: true
+          #default: false 
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+    
+    - name: Log in to Amazon ECR
+      run: |
+        aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REPOSITORY_URI }}
+    
+    - name: Build Docker image
+      run: |
+        IMAGE_TAG=$(echo $GITHUB_SHA | head -c7)
+        docker build -t ${{ secrets.ECR_REPOSITORY_URI }}:$IMAGE_TAG .
+        echo "::set-output name=image_tag::$IMAGE_TAG"
+      id: build
+    
+    - name: Push Docker image to ECR
+      run: |
+        IMAGE_TAG=${{ steps.build.outputs.image_tag }}
+        docker push ${{ secrets.ECR_REPOSITORY_URI }}:$IMAGE_TAG
