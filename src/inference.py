@@ -9,8 +9,12 @@ def load_model(model_dir: str) -> XGBClassifier:
     """
     Load the model from the specified directory.
     """
-    return joblib.load(os.path.join(model_dir, "xgboost_iris_model.joblib"))
-
+    #return joblib.load(os.path.join(model_dir, "xgboost_iris_model.joblib"))
+    try:
+        model = joblib.load(os.path.join(model_dir, "xgboost_iris_model.joblib"))
+    except Exception as e:
+        print(f"Error occurred: {e}")
+    return model    
 
 def predict(body: dict, model: XGBClassifier) -> dict:
     """

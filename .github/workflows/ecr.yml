@@ -49,3 +49,4 @@ jobs:
       run: |
         IMAGE_TAG=${{ steps.build.outputs.image_tag }}
         docker push ${{ secrets.ECR_REPOSITORY_URI }}:$IMAGE_TAG
+        docker stats
